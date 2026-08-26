@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <title>Urbaniza</title>
+
+</head>
+
+<body>
+
+    <header>
+
+        <h1>Urbaniza</h1>
+
+    </header>
+
+    <main>
+
+        <section class="map-container">
+
+            <div class="map-search">
+
+                <input
+                    type="text"
+                    id="search"
+                    placeholder="Digite um endereço"
+                >
+
+                <button id="search-btn">
+                    Pesquisar
+                </button>
+
+            </div>
+
+            <!-- Mapa -->
+            <div id="map"></div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Leaflet JS -->
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <!-- Seu JavaScript -->
+    <script src="js/services/script.js"></script>
+
+    <!-- Supabase -->
+    <script src="js/services/supabase.js"></script>
+
+</body>
+
+</html>
