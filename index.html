@@ -1,69 +1,160 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-
+<html lang="pt-BR">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Urbaniza - avaliação urbana feita pelos moradores.">
+    <title>Urbaniza - Avalie sua cidade</title>
 
-    <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/styles.css">
-
-    <!-- Leaflet CSS -->
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    >
-
-    <title>Urbaniza</title>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 </head>
-
 <body>
-
-    <header>
-
-        <h1>Urbaniza</h1>
-
+    <header class="header">
+        <div class="container header-content">
+            <div class="brand">
+                <div class="brand-icon">U</div>
+                <div>
+                    <h1>Urbaniza</h1>
+                    <p>Ajude a melhorar a cidade.</p>
+                </div>
+            </div>
+            <span class="header-badge">Participação cidadã</span>
+        </div>
     </header>
 
-    <main>
-
-        <section class="map-container">
-
-            <div class="map-search">
-
-                <input
-                    type="text"
-                    id="search"
-                    placeholder="Digite um endereço"
-                >
-
-                <button id="search-btn">
-                    Pesquisar
-                </button>
-
+    <main class="container">
+        <section class="hero-card">
+            <div class="hero-text">
+                <span class="eyebrow">AVALIAÇÃO URBANA</span>
+                <h2>O que precisa melhorar perto de você?</h2>
+                <p>Use sua localização, escolha um tema e conte como está o local.</p>
             </div>
 
-            <!-- Mapa -->
-            <div id="map"></div>
-
+            <div class="location-card">
+                <div class="location-icon">📍</div>
+                <div>
+                    <strong id="localNome">Localização não identificada</strong>
+                    <span id="localRegiao">Permita o acesso à localização para continuar.</span>
+                </div>
+                <button type="button" id="btnLocalizacao" class="secondary-button">Usar minha localização</button>
+            </div>
         </section>
 
+        <section class="layout-grid">
+            <div class="main-column">
+                <section class="card">
+                    <div class="section-title">
+                        <div>
+                            <span class="step">1</span>
+                            <div>
+                                <h2>Local do problema</h2>
+                                <p>O mapa mostra onde sua avaliação será registrada.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="map"></div>
+
+                    <div class="map-footer">
+                        <span id="localizacaoStatus">Obtendo sua localização...</span>
+                        <button type="button" id="btnCentralizar" class="map-button">↗ Centralizar</button>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="section-title">
+                        <div>
+                            <span class="step">2</span>
+                            <div>
+                                <h2>Faça sua avaliação</h2>
+                                <p>Sua opinião ajuda a identificar prioridades.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="avaliacaoForm">
+                        <div class="form-group">
+                            <label for="categoria">O que você quer avaliar?</label>
+                            <select id="categoria" required>
+                                <option value="">Selecione uma categoria</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Como você avalia este local?</label>
+                            <div class="rating-help">
+                                <span>1 = muito ruim</span>
+                                <span>10 = excelente</span>
+                            </div>
+                            <div id="notas" class="rating-grid">
+                                <button type="button" class="nota-btn" data-nota="1">1</button>
+                                <button type="button" class="nota-btn" data-nota="2">2</button>
+                                <button type="button" class="nota-btn" data-nota="3">3</button>
+                                <button type="button" class="nota-btn" data-nota="4">4</button>
+                                <button type="button" class="nota-btn" data-nota="5">5</button>
+                                <button type="button" class="nota-btn" data-nota="6">6</button>
+                                <button type="button" class="nota-btn" data-nota="7">7</button>
+                                <button type="button" class="nota-btn" data-nota="8">8</button>
+                                <button type="button" class="nota-btn" data-nota="9">9</button>
+                                <button type="button" class="nota-btn" data-nota="10">10</button>
+                            </div>
+                            <input type="hidden" id="nota" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="comentario">Quer explicar melhor?</label>
+                            <textarea id="comentario" rows="4" maxlength="1000"
+                                placeholder="Ex.: A calçada está quebrada e dificulta a passagem..."></textarea>
+                        </div>
+
+                        <button type="submit" class="primary-button" id="btnEnviar">
+                            Enviar avaliação
+                        </button>
+                        <p id="formStatus" class="status-message"></p>
+                    </form>
+                </section>
+            </div>
+
+            <aside class="side-column">
+                <section class="card info-card">
+                    <div class="section-title compact">
+                        <div>
+                            <h2>Como funciona?</h2>
+                            <p>É rápido e simples.</p>
+                        </div>
+                    </div>
+                    <ol class="steps">
+                        <li><span>1</span><div><strong>Localização</strong><p>O sistema identifica seu bairro automaticamente.</p></div></li>
+                        <li><span>2</span><div><strong>Avaliação</strong><p>Escolha uma categoria e dê uma nota de 1 a 10.</p></div></li>
+                        <li><span>3</span><div><strong>Análise</strong><p>As avaliações ajudam a encontrar áreas prioritárias.</p></div></li>
+                    </ol>
+                </section>
+
+                <section class="card recent-card">
+                    <div class="section-title compact">
+                        <div>
+                            <h2>Avaliações recentes</h2>
+                            <p>Contribuições da comunidade.</p>
+                        </div>
+                    </div>
+                    <div id="avaliacoesLista" class="avaliacoes-lista">
+                        <p>Carregando...</p>
+                    </div>
+                </section>
+            </aside>
+        </section>
     </main>
 
+    <footer class="footer">
+        <div class="container">
+            <strong>Urbaniza</strong>
+            <span>Participação cidadã para uma cidade melhor.</span>
+        </div>
+    </footer>
 
-    <!-- Leaflet JS -->
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
-
-    <!-- Seu JavaScript -->
-    <script src="js/services/script.js"></script>
-
-    <!-- Supabase -->
-    <script src="js/services/supabase.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/script.js"></script>
 </body>
-
 </html>
