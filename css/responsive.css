@@ -1,0 +1,324 @@
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+html {
+    overflow-x: hidden;
+}
+
+body {
+    min-width: 320px;
+    overflow-x: hidden;
+}
+
+img,
+svg {
+    max-width: 100%;
+}
+
+button,
+select,
+textarea {
+    max-width: 100%;
+}
+
+/* Tablets e telas menores */
+@media (max-width: 900px) {
+    .container {
+        width: min(100% - 28px, 1180px);
+    }
+
+    .layout-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .side-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+    }
+
+    .side-column .card {
+        margin-bottom: 0;
+    }
+
+    .hero-text h2 {
+        font-size: clamp(30px, 6vw, 40px);
+    }
+}
+
+/* Celulares */
+@media (max-width: 650px) {
+    .container {
+        width: calc(100% - 24px);
+    }
+
+    main {
+        padding: 14px 0 30px;
+    }
+
+    .header-content {
+        min-height: 62px;
+        gap: 10px;
+    }
+
+    .brand {
+        gap: 9px;
+    }
+
+    .brand-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        font-size: 18px;
+    }
+
+    .brand h1 {
+        font-size: 20px;
+    }
+
+    .brand p {
+        font-size: 11px;
+    }
+
+    .header-badge {
+        display: none;
+    }
+
+    .hero-card {
+        padding: 20px 16px;
+        border-radius: 16px;
+        margin-bottom: 14px;
+    }
+
+    .hero-text {
+        margin-bottom: 18px;
+    }
+
+    .eyebrow {
+        font-size: 10px;
+    }
+
+    .hero-text h2 {
+        margin: 7px 0;
+        font-size: 30px;
+        line-height: 1.08;
+        letter-spacing: -0.8px;
+    }
+
+    .hero-text p {
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    .location-card {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .location-card .secondary-button {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .location-card strong {
+        font-size: 14px;
+    }
+
+    .location-card span {
+        font-size: 12px;
+        line-height: 1.35;
+    }
+
+    .layout-grid {
+        gap: 14px;
+    }
+
+    .card {
+        padding: 16px;
+        border-radius: 15px;
+        margin-bottom: 14px;
+    }
+
+    .section-title {
+        margin-bottom: 14px;
+    }
+
+    .section-title > div {
+        gap: 9px;
+    }
+
+    .section-title h2 {
+        font-size: 18px;
+        margin-bottom: 3px;
+    }
+
+    .section-title p {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .step {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    #map {
+        height: 330px;
+        min-height: 280px;
+        border-radius: 12px;
+    }
+
+    .map-footer {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #localizacaoStatus {
+        font-size: 12px;
+        line-height: 1.35;
+    }
+
+    .map-button {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+
+    .form-group {
+        margin-bottom: 17px;
+    }
+
+    label {
+        font-size: 13px;
+        margin-bottom: 7px;
+    }
+
+    select,
+    textarea {
+        font-size: 16px;
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    textarea {
+        min-height: 110px;
+    }
+
+    .rating-help {
+        font-size: 11px;
+    }
+
+    .rating-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 7px;
+    }
+
+    .nota-btn {
+        min-height: 42px;
+    }
+
+    .primary-button,
+    .secondary-button {
+        min-height: 44px;
+    }
+
+    .side-column {
+        display: block;
+    }
+
+    .side-column .card {
+        margin-bottom: 14px;
+    }
+
+    .steps {
+        gap: 10px;
+    }
+
+    .steps li {
+        padding: 10px 0;
+    }
+
+    .steps strong {
+        font-size: 13px;
+    }
+
+    .steps p {
+        font-size: 12px;
+    }
+
+    .avaliacao-item {
+        padding: 11px 0;
+    }
+
+    .avaliacao-topo strong {
+        font-size: 12px;
+    }
+
+    .avaliacao-meta,
+    .avaliacao-item p {
+        font-size: 11px;
+    }
+
+    .footer {
+        padding: 18px 0;
+    }
+
+    .footer .container {
+        display: block;
+    }
+
+    .footer span {
+        display: block;
+        margin-top: 4px;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    /* Facilita o uso dos controles do Leaflet no toque */
+    .leaflet-control-zoom a {
+        width: 38px !important;
+        height: 38px !important;
+        line-height: 38px !important;
+        font-size: 20px !important;
+    }
+
+    .leaflet-control-attribution {
+        font-size: 9px !important;
+    }
+}
+
+/* Celulares muito estreitos */
+@media (max-width: 380px) {
+    .container {
+        width: calc(100% - 18px);
+    }
+
+    .hero-card,
+    .card {
+        padding: 14px;
+    }
+
+    .hero-text h2 {
+        font-size: 27px;
+    }
+
+    #map {
+        height: 290px;
+    }
+
+    .rating-grid {
+        gap: 5px;
+    }
+
+    .nota-btn {
+        min-height: 40px;
+        padding: 7px 3px;
+        font-size: 13px;
+    }
+}
