@@ -7,6 +7,7 @@
     <title>Urbaniza - Avalie sua cidade</title>
 
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
@@ -106,6 +107,18 @@
                             <label for="comentario">Quer explicar melhor?</label>
                             <textarea id="comentario" rows="4" maxlength="1000"
                                 placeholder="Ex.: A calçada está quebrada e dificulta a passagem..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="midias">Adicionar fotos ou vídeos <span class="optional">(opcional)</span></label>
+                            <input
+                                type="file"
+                                id="midias"
+                                accept="image/*,video/*"
+                                multiple
+                            >
+                            <p class="file-help">Você pode selecionar fotos e vídeos para mostrar melhor o problema. Máximo de 5 arquivos, até 10 MB cada.</p>
+                            <div id="midiasPreview" class="midias-preview"></div>
                         </div>
 
                         <button type="submit" class="primary-button" id="btnEnviar">

@@ -525,3 +525,81 @@ textarea {
         margin-top: 4px;
     }
 }
+
+/* Upload de fotos e vídeos */
+.optional {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+input[type="file"] {
+    width: 100%;
+    padding: 11px;
+    border: 1px dashed #b9c7c0;
+    border-radius: 10px;
+    background: #f8faf9;
+    font: inherit;
+    cursor: pointer;
+}
+
+.file-help {
+    margin: 7px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.midias-preview {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.midia-arquivo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border: 1px solid #e1e8e4;
+    border-radius: 9px;
+    background: #fff;
+    min-width: 0;
+}
+
+.midia-arquivo div {
+    min-width: 0;
+}
+
+.midia-arquivo strong,
+.midia-arquivo small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.midia-arquivo strong {
+    font-size: 12px;
+}
+
+.midia-arquivo small {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.avaliacao-midias {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.avaliacao-midias img,
+.avaliacao-midias video {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 9px;
+    background: #eef2ef;
+}

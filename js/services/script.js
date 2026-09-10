@@ -8,6 +8,8 @@ const categoriaSelect = document.getElementById("categoria");
 const avaliacaoForm = document.getElementById("avaliacaoForm");
 const notaInput = document.getElementById("nota");
 const comentarioInput = document.getElementById("comentario");
+const midiasInput = document.getElementById("midias");
+const midiasPreview = document.getElementById("midiasPreview");
 const formStatus = document.getElementById("formStatus");
 const btnLocalizacao = document.getElementById("btnLocalizacao");
 const btnCentralizar = document.getElementById("btnCentralizar");
@@ -27,6 +29,13 @@ let map;
 let userMarker;
 let accuracyCircle;
 let markersLayer;
+
+const MAX_ARQUIVOS = 5;
+const MAX_TAMANHO_MB = 10;
+
+if (midiasInput) {
+    midiasInput.addEventListener("change", atualizarPreviewMidias);
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     configurarNotas();
@@ -234,10 +243,32 @@ avaliacaoForm.addEventListener("submit", async (event) => {
         return;
     }
 
+    const arquivos = Array.from(midiasInput?.files || []);
+
+    if (arquivos.length > MAX_ARQUIVOS) {
+        mostrarStatus(formStatus, `Selecione no máximo ${MAX_ARQUIVOS} arquivos.`, true);
+        return;
+    }
+
+    const arquivoInvalido = arquivos.find((arquivo) => {
+        const tamanhoMB = arquivo.size / (1024 * 1024);
+        const tipoValido = arquivo.type.startsWith("image/") || arquivo.type.startsWith("video/");
+        return !tipoValido || tamanhoMB > MAX_TAMANHO_MB;
+    });
+
+    if (arquivoInvalido) {
+        mostrarStatus(
+            formStatus,
+            `O arquivo "${arquivoInvalido.name}" é inválido. Use apenas fotos/vídeos de até ${MAX_TAMANHO_MB} MB.`,
+            true
+        );
+        return;
+    }
+
     btnEnviar.disabled = true;
     mostrarStatus(formStatus, "Enviando avaliação...");
 
-    const { error } = await db
+    const { data: avaliacao, error: avaliacaoError } = await db
         .from("avaliacoes")
         .insert([{
             bairro_id: bairroId,
@@ -245,7 +276,72 @@ avaliacaoForm.addEventListener("submit", async (event) => {
             nota: Number(nota),
             comentario: comentario || null,
             localizacao: `SRID=4326;POINT(${longitude} ${latitude})`
-        }]);
+        }])
+        .select("id")
+        .single();
+
+    if (avaliacaoError) {
+        btnEnviar.disabled = false;
+        console.error("Erro ao enviar avaliação:", avaliacaoError);
+        mostrarStatus(formStatus, "Não foi possível enviar a avaliação: " + avaliacaoError.message, true);
+        return;
+    }
+
+    const midiasSalvas = [];
+
+    for (const arquivo of arquivos) {
+        const extensao = arquivo.name.includes(".")
+            ? arquivo.name.split(".").pop().toLowerCase()
+            : "bin";
+        const pasta = arquivo.type.startsWith("video/") ? "videos" : "fotos";
+        const nomeSeguro = `${Date.now()}-${crypto.randomUUID()}.${extensao}`;
+        const caminho = `${pasta}/${avaliacao.id}/${nomeSeguro}`;
+
+        const { error: uploadError } = await db.storage
+            .from("avaliacoes")
+            .upload(caminho, arquivo, {
+                cacheControl: "3600",
+                upsert: false,
+                contentType: arquivo.type
+            });
+
+        if (uploadError) {
+            console.error("Erro ao enviar mídia:", uploadError);
+            btnEnviar.disabled = false;
+            mostrarStatus(formStatus, `A avaliação foi criada, mas não foi possível enviar o arquivo "${arquivo.name}". Tente novamente com arquivos menores.`, true);
+            return;
+        }
+
+        const { data: urlData } = db.storage
+            .from("avaliacoes")
+            .getPublicUrl(caminho);
+
+        midiasSalvas.push({
+            tipo: arquivo.type.startsWith("video/") ? "video" : "foto",
+            url: urlData.publicUrl,
+            caminho
+        });
+    }
+
+    if (midiasSalvas.length > 0) {
+        const { error: midiasError } = await db
+            .from("avaliacao_midias")
+            .insert(
+                midiasSalvas.map((midia) => ({
+                    avaliacao_id: avaliacao.id,
+                    tipo: midia.tipo,
+                    url: midia.url,
+                    caminho: midia.caminho
+                }))
+            );
+
+        if (midiasError) {
+            console.error("Erro ao registrar mídias:", midiasError);
+            btnEnviar.disabled = false;
+            mostrarStatus(formStatus, "A avaliação foi criada, mas não foi possível registrar as mídias.", true);
+            return;
+        }
+    }
 
     btnEnviar.disabled = false;
 
@@ -263,6 +359,8 @@ avaliacaoForm.addEventListener("submit", async (event) => {
     });
 
     notaInput.value = "";
+    if (midiasInput) midiasInput.value = "";
+    if (midiasPreview) midiasPreview.innerHTML = "";
     await carregarAvaliacoes();
 });
 
@@ -288,7 +386,8 @@ async function carregarAvaliacoes() {
             localizacao,
             criado_em,
             bairros (nome, cidade, estado),
-            categorias (nome)
+            categorias (nome),
+            avaliacao_midias (id, tipo, url)
         `)
         .order("criado_em", { ascending: false })
         .limit(20);
@@ -313,6 +412,15 @@ async function carregarAvaliacoes() {
         const dataFormatada = avaliacao.criado_em
             ? new Date(avaliacao.criado_em).toLocaleString("pt-BR")
             : "";
+        const midias = avaliacao.avaliacao_midias || [];
+        const midiasHTML = midias.length > 0
+            ? `<div class="avaliacao-midias">${midias.map((midia) => {
+                if (midia.tipo === "video") {
+                    return `<video controls preload="metadata" src="${escaparHTML(midia.url)}"></video>`;
+                }
+                return `<img src="${escaparHTML(midia.url)}" alt="Imagem da avaliação" loading="lazy">`;
+            }).join("")}</div>`
+            : "";
 
         return `
             <article class="avaliacao-item">
@@ -322,6 +430,7 @@ async function carregarAvaliacoes() {
                 </div>
                 <div class="avaliacao-meta">${escaparHTML(categoria)} • ${dataFormatada}</div>
                 <p>${comentario}</p>
+                ${midiasHTML}
             </article>
         `;
     }).join("");
@@ -374,6 +483,25 @@ function extrairPonto(localizacao) {
         longitude: Number(match[1]),
         latitude: Number(match[2])
     };
+}
+
+function atualizarPreviewMidias() {
+    if (!midiasPreview || !midiasInput) return;
+
+    const arquivos = Array.from(midiasInput.files || []);
+    midiasPreview.innerHTML = arquivos.map((arquivo) => {
+        const tamanhoMB = (arquivo.size / (1024 * 1024)).toFixed(1);
+        const tipo = arquivo.type.startsWith("video/") ? "Vídeo" : "Foto";
+        return `
+            <div class="midia-arquivo">
+                <span>📎</span>
+                <div>
+                    <strong>${escaparHTML(arquivo.name)}</strong>
+                    <small>${tipo} • ${tamanhoMB} MB</small>
+                </div>
+            </div>
+        `;
+    }).join("");
 }
 
 function mostrarStatus(elemento, mensagem, erro = false) {
