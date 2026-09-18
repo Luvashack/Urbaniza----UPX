@@ -32,11 +32,12 @@
                 <p>Use sua localização, escolha um tema e conte como está o local.</p>
             </div>
 
-            <div class="location-card">
+            <div class="location-card" aria-live="polite">
                 <div class="location-icon">📍</div>
-                <div>
-                    <strong id="localNome">Localização não identificada</strong>
-                    <span id="localRegiao">Permita o acesso à localização para continuar.</span>
+                <div class="location-details">
+                    <strong class="location-title">Sua localização atual</strong>
+                    <span id="localEndereco" class="location-address">Localização não identificada</span>
+                    <span id="localRegiao" class="location-locality">Permita o acesso à localização para continuar.</span>
                 </div>
                 <button type="button" id="btnLocalizacao" class="secondary-button">Usar minha localização</button>
             </div>
@@ -50,7 +51,7 @@
                             <span class="step">1</span>
                             <div>
                                 <h2>Local do problema</h2>
-                                <p>O mapa mostra onde sua avaliação será registrada.</p>
+                                <p>O mapa mostra onde sua avaliação será registrada e o endereço é identificado automaticamente.</p>
                             </div>
                         </div>
                     </div>
@@ -138,7 +139,7 @@
                         </div>
                     </div>
                     <ol class="steps">
-                        <li><span>1</span><div><strong>Localização</strong><p>O sistema identifica seu bairro automaticamente.</p></div></li>
+                        <li><span>1</span><div><strong>Localização</strong><p>O sistema identifica seu endereço automaticamente.</p></div></li>
                         <li><span>2</span><div><strong>Avaliação</strong><p>Escolha uma categoria e dê uma nota de 1 a 10.</p></div></li>
                         <li><span>3</span><div><strong>Análise</strong><p>As avaliações ajudam a encontrar áreas prioritárias.</p></div></li>
                     </ol>
@@ -162,7 +163,7 @@
     <footer class="footer">
         <div class="container">
             <strong>Urbaniza</strong>
-            <span>Participação cidadã para uma cidade melhor.</span>
+            <span>Participação cidadã para uma cidade melhor. Mapas: OpenStreetMap. Endereços: OpenStreetMap / Nominatim.</span>
         </div>
     </footer>
 

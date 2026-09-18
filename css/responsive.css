@@ -124,11 +124,15 @@ textarea {
         min-height: 44px;
     }
 
-    .location-card strong {
+    .location-title {
+        font-size: 10px;
+    }
+
+    .location-address {
         font-size: 14px;
     }
 
-    .location-card span {
+    .location-locality {
         font-size: 12px;
         line-height: 1.35;
     }

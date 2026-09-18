@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://xjrbsaytdlucnhvpoqcj.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Bk5rQIdwj3hGyOxU5Ursfw_5XKDcT1h";
+const SUPABASE_URL = "https://hpzhwmlhmfrezkptgimw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_YGYPrQvqmrNisbcEx6SGyA_iZi5nU3U";
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -14,17 +14,14 @@ const formStatus = document.getElementById("formStatus");
 const btnLocalizacao = document.getElementById("btnLocalizacao");
 const btnCentralizar = document.getElementById("btnCentralizar");
 const localizacaoStatus = document.getElementById("localizacaoStatus");
-const localNome = document.getElementById("localNome");
+const localEndereco = document.getElementById("localEndereco");
 const localRegiao = document.getElementById("localRegiao");
 const avaliacoesLista = document.getElementById("avaliacoesLista");
 const btnEnviar = document.getElementById("btnEnviar");
 
 let latitude = null;
 let longitude = null;
-let bairroId = null;
-let bairroNome = null;
-let regiaoId = null;
-let regiaoNome = null;
+let enderecoAtual = null;
 let map;
 let userMarker;
 let accuracyCircle;
@@ -120,7 +117,7 @@ function inicializarMapa() {
 function obterLocalizacao() {
     if (!navigator.geolocation) {
         mostrarStatus(localizacaoStatus, "Seu navegador não suporta geolocalização.", true);
-        localNome.textContent = "Localização indisponível";
+        localEndereco.textContent = "Localização indisponível";
         localRegiao.textContent = "Use um navegador com suporte a GPS.";
         return;
     }
@@ -142,7 +139,7 @@ function obterLocalizacao() {
                 "Não foi possível obter sua localização. Permita o acesso ao GPS.",
                 true
             );
-            localNome.textContent = "Localização não identificada";
+            localEndereco.textContent = "Localização não identificada";
             localRegiao.textContent = "Clique em “Usar minha localização” para tentar novamente.";
         },
         {
@@ -154,71 +151,171 @@ function obterLocalizacao() {
 }
 
 async function aplicarLocalizacao(lat, lon, accuracy = null) {
-    latitude = lat;
-    longitude = lon;
+    latitude = Number(lat);
+    longitude = Number(lon);
 
-    if (map) map.setView([lat, lon], 16);
+    if (map) map.setView([latitude, longitude], 17);
 
-    if (userMarker) map.removeLayer(userMarker);
-    if (accuracyCircle) map.removeLayer(accuracyCircle);
+    if (userMarker && map) map.removeLayer(userMarker);
+    if (accuracyCircle && map) map.removeLayer(accuracyCircle);
 
-    if (map && window.L) userMarker = L.marker([lat, lon]).addTo(map);
-    userMarker.bindPopup("<strong>Você está aqui</strong>").openPopup();
+    if (map && window.L) {
+        userMarker = L.marker([latitude, longitude]).addTo(map);
+        userMarker.bindPopup("<strong>Você está aqui</strong>").openPopup();
 
-    if (map && window.L && accuracy && Number.isFinite(accuracy)) {
-        accuracyCircle = L.circle([lat, lon], {
-            radius: accuracy,
-            weight: 1,
-            fillOpacity: 0.08
-        }).addTo(map);
+        if (accuracy && Number.isFinite(accuracy)) {
+            accuracyCircle = L.circle([latitude, longitude], {
+                radius: accuracy,
+                weight: 1,
+                fillOpacity: 0.08
+            }).addTo(map);
+        }
     }
 
-    mostrarStatus(localizacaoStatus, "Localização encontrada. Identificando o bairro...");
+    mostrarStatus(localizacaoStatus, "Localização encontrada. Identificando endereço...");
 
-    const { data, error } = await db.rpc("identificar_bairro", {
-        latitude: lat,
-        longitude: lon
-    });
+    try {
+        // O GPS fornece as coordenadas e o reverse geocoding transforma
+        // essas coordenadas em rua, bairro, cidade, estado e CEP.
+        enderecoAtual = await obterEnderecoPorCoordenadas(latitude, longitude);
 
-    if (error) {
-        console.error("Erro ao identificar bairro:", error);
-        bairroId = null;
-        bairroNome = null;
-        regiaoId = null;
-        regiaoNome = null;
+        localEndereco.textContent = formatarLinhaPrincipal(enderecoAtual);
+        localRegiao.textContent = formatarLinhaLocalidade(enderecoAtual);
 
-        localNome.textContent = "Localização encontrada";
-        localRegiao.textContent = "Não foi possível identificar o bairro no banco.";
         mostrarStatus(
             localizacaoStatus,
-            "GPS encontrado, mas o bairro ainda não foi identificado.",
+            "Endereço identificado automaticamente. Você já pode fazer sua avaliação."
+        );
+    } catch (error) {
+        console.error("Erro ao identificar endereço:", error);
+
+        enderecoAtual = null;
+        localEndereco.textContent = "Endereço não identificado";
+        localRegiao.textContent = "Não foi possível obter o endereço desta localização.";
+        mostrarStatus(
+            localizacaoStatus,
+            "GPS encontrado, mas não foi possível identificar o endereço.",
             true
         );
-        return;
+    }
+}
+
+async function obterEnderecoPorCoordenadas(lat, lon) {
+    const chaveCache = `urbaniza-endereco:${lat.toFixed(5)}:${lon.toFixed(5)}`;
+    const cache = sessionStorage.getItem(chaveCache);
+
+    if (cache) {
+        return JSON.parse(cache);
     }
 
-    const local = Array.isArray(data) ? data[0] : data;
+    const url = new URL("https://nominatim.openstreetmap.org/reverse");
+    url.searchParams.set("lat", lat.toFixed(7));
+    url.searchParams.set("lon", lon.toFixed(7));
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("zoom", "18");
+    url.searchParams.set("layer", "address");
+    url.searchParams.set("accept-language", "pt-BR");
 
-    if (!local) {
-        bairroId = null;
-        bairroNome = null;
-        regiaoId = null;
-        regiaoNome = null;
+    const resposta = await fetch(url.toString(), {
+        headers: {
+            "Accept": "application/json"
+        }
+    });
 
-        localNome.textContent = "Área não cadastrada";
-        localRegiao.textContent = "Este ponto ainda não está dentro de um bairro cadastrado.";
-        mostrarStatus(localizacaoStatus, "Localização encontrada, mas sem bairro cadastrado.", true);
-        return;
+    if (!resposta.ok) {
+        throw new Error(`Serviço de endereço retornou HTTP ${resposta.status}.`);
     }
 
-    bairroId = Number(local.bairro_id);
-    bairroNome = local.bairro_nome;
-    regiaoId = Number(local.regiao_id);
-    regiaoNome = local.regiao_nome;
+    const resultado = await resposta.json();
+    const endereco = resultado?.address || {};
 
-    localNome.textContent = bairroNome;
-    localRegiao.textContent = `${regiaoNome} • Sorocaba/SP`;
-    mostrarStatus(localizacaoStatus, "Local identificado automaticamente.");
+    const cidade = endereco.city || endereco.town || endereco.municipality;
+    const estado = endereco.state;
+    const pais = endereco.country_code;
+
+    if (pais && pais.toLowerCase() !== "br") {
+        throw new Error("A localização identificada não está no Brasil.");
+    }
+
+    if (cidade && normalizarTexto(cidade) !== "sorocaba") {
+        throw new Error(`Localização identificada fora de Sorocaba: ${cidade}.`);
+    }
+
+    if (estado && !normalizarTexto(estado).includes("sao paulo")) {
+        throw new Error(`Localização identificada fora de São Paulo: ${estado}.`);
+    }
+
+    const bairro =
+        endereco.neighbourhood ||
+        endereco.suburb ||
+        endereco.quarter ||
+        endereco.city_district ||
+        endereco.residential ||
+        endereco.hamlet ||
+        "";
+
+    const logradouro = endereco.road || endereco.pedestrian || endereco.footway || "";
+    const numero = endereco.house_number || "";
+    const cep = endereco.postcode || "";
+    const cidadeFinal = cidade || "Sorocaba";
+    const estadoFinal = estado || "São Paulo";
+
+    if (!logradouro && !bairro) {
+        throw new Error("O serviço de geocodificação não retornou rua ou bairro.");
+    }
+
+    const enderecoFormatado = [
+        logradouro ? `${logradouro}${numero ? `, ${numero}` : ""}` : null,
+        bairro || null,
+        cidadeFinal,
+        estadoFinal,
+        cep || null
+    ].filter(Boolean).join(" • ");
+
+    const dados = {
+        logradouro,
+        numero,
+        bairro,
+        cidade: cidadeFinal,
+        estado: estadoFinal,
+        cep,
+        endereco_formatado: enderecoFormatado
+    };
+
+    sessionStorage.setItem(chaveCache, JSON.stringify(dados));
+    return dados;
+}
+
+function formatarLinhaPrincipal(endereco) {
+    if (!endereco) return "Endereço não identificado";
+
+    if (endereco.logradouro) {
+        return `${endereco.logradouro}${endereco.numero ? `, ${endereco.numero}` : ""}`;
+    }
+
+    return endereco.bairro || "Endereço não identificado";
+}
+
+function formatarLinhaLocalidade(endereco) {
+    if (!endereco) return "";
+
+    const localidade = [endereco.bairro, endereco.cidade]
+        .filter(Boolean)
+        .join(", ");
+
+    const estado = endereco.estado || "";
+    const cep = endereco.cep ? ` • CEP ${endereco.cep}` : "";
+
+    return [localidade, estado].filter(Boolean).join(" - ") + cep;
+}
+
+function normalizarTexto(valor) {
+    return String(valor)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .toLowerCase();
 }
 
 avaliacaoForm.addEventListener("submit", async (event) => {
@@ -233,8 +330,8 @@ avaliacaoForm.addEventListener("submit", async (event) => {
         return;
     }
 
-    if (!bairroId) {
-        mostrarStatus(formStatus, "Não foi possível identificar o bairro deste ponto.", true);
+    if (!enderecoAtual) {
+        mostrarStatus(formStatus, "Primeiro, identifique sua localização para obter o endereço.", true);
         return;
     }
 
@@ -271,10 +368,16 @@ avaliacaoForm.addEventListener("submit", async (event) => {
     const { data: avaliacao, error: avaliacaoError } = await db
         .from("avaliacoes")
         .insert([{
-            bairro_id: bairroId,
             categoria_id: Number(categoriaId),
             nota: Number(nota),
             comentario: comentario || null,
+            logradouro: enderecoAtual.logradouro || null,
+            numero: enderecoAtual.numero || null,
+            bairro: enderecoAtual.bairro || null,
+            cidade: enderecoAtual.cidade || null,
+            estado: enderecoAtual.estado || null,
+            cep: enderecoAtual.cep || null,
+            endereco_formatado: enderecoAtual.endereco_formatado || null,
             localizacao: `SRID=4326;POINT(${longitude} ${latitude})`
         }])
         .select("id")
@@ -345,11 +448,6 @@ avaliacaoForm.addEventListener("submit", async (event) => {
 
     btnEnviar.disabled = false;
 
-    if (error) {
-        console.error("Erro ao enviar avaliação:", error);
-        mostrarStatus(formStatus, "Não foi possível enviar a avaliação: " + error.message, true);
-        return;
-    }
 
     mostrarStatus(formStatus, "Avaliação enviada com sucesso!");
     avaliacaoForm.reset();
@@ -385,7 +483,10 @@ async function carregarAvaliacoes() {
             comentario,
             localizacao,
             criado_em,
-            bairros (nome, cidade, estado),
+            bairro,
+            cidade,
+            estado,
+            endereco_formatado,
             categorias (nome),
             avaliacao_midias (id, tipo, url)
         `)
@@ -404,7 +505,7 @@ async function carregarAvaliacoes() {
     }
 
     avaliacoesLista.innerHTML = data.map((avaliacao) => {
-        const bairro = avaliacao.bairros?.nome || "Bairro não informado";
+        const bairro = avaliacao.bairro || "Bairro não informado";
         const categoria = avaliacao.categorias?.nome || "Categoria não informada";
         const comentario = avaliacao.comentario
             ? escaparHTML(avaliacao.comentario)
@@ -429,6 +530,7 @@ async function carregarAvaliacoes() {
                     <span class="avaliacao-nota">${avaliacao.nota}/10</span>
                 </div>
                 <div class="avaliacao-meta">${escaparHTML(categoria)} • ${dataFormatada}</div>
+                <small class="avaliacao-endereco">${escaparHTML(avaliacao.endereco_formatado || [avaliacao.cidade, avaliacao.estado].filter(Boolean).join(" - "))}</small>
                 <p>${comentario}</p>
                 ${midiasHTML}
             </article>
@@ -447,7 +549,7 @@ function atualizarMarcadores(avaliacoes) {
         const ponto = extrairPonto(avaliacao.localizacao);
         if (!ponto) return;
 
-        const bairro = avaliacao.bairros?.nome || "Bairro";
+        const bairro = avaliacao.bairro || "Bairro";
         const categoria = avaliacao.categorias?.nome || "Categoria";
 
         const marker = L.marker([ponto.latitude, ponto.longitude]);
