@@ -1,5 +1,5 @@
-const SUPABASE_URL = "https://hpzhwmlhmfrezkptgimw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_YGYPrQvqmrNisbcEx6SGyA_iZi5nU3U";
+const SUPABASE_URL = "https://xjrbsaytdlucnhvpoqcj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Bk5rQIdwj3hGyOxU5Ursfw_5XKDcT1h";
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -52,7 +52,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    await carregarCategorias();
     await carregarAvaliacoes();
     obterLocalizacao();
 });
@@ -74,39 +73,6 @@ function configurarNotas() {
             botao.classList.add("selected");
             notaInput.value = botao.dataset.nota;
         });
-    });
-}
-
-
-// ============================================================
-// CATEGORIAS
-// ============================================================
-
-async function carregarCategorias() {
-    const { data, error } = await db
-        .from("categorias")
-        .select("id, nome")
-        .order("nome", { ascending: true });
-
-    if (error) {
-        console.error("Erro ao carregar categorias:", error);
-
-        categoriaSelect.innerHTML =
-            '<option value="">Erro ao carregar categorias</option>';
-
-        return;
-    }
-
-    categoriaSelect.innerHTML =
-        '<option value="">Selecione uma categoria</option>';
-
-    data.forEach((categoria) => {
-        const option = document.createElement("option");
-
-        option.value = categoria.id;
-        option.textContent = categoria.nome;
-
-        categoriaSelect.appendChild(option);
     });
 }
 
@@ -892,8 +858,8 @@ avaliacaoForm.addEventListener(
             .from("avaliacoes")
             .insert([
                 {
-                    categoria_id:
-                        Number(categoriaId),
+                    categoria:
+                        categoriaId,
 
                     bairro_id:
                         bairroId,
@@ -1012,20 +978,20 @@ avaliacaoForm.addEventListener(
 
             if (uploadError) {
 
-                console.error(
-                    "Erro ao enviar mídia:",
-                    uploadError
-                );
+               console.error("Arquivo:", arquivo.name);
+               console.error("Tipo:", arquivo.type);
+               console.error("Tamanho:", arquivo.size);
+               console.error("Mensagem:", uploadError.menssage);
+               console.error("Detalhes:", uploadError);
 
-                btnEnviar.disabled = false;
+               btnEnviar.disabled = false;
 
-                mostrarStatus(
-                    formStatus,
-                    `A avaliação foi criada, mas não foi possível enviar o arquivo "${arquivo.name}". Tente novamente com arquivos menores.`,
-                    true
-                );
-
-                return;
+               mostrarStatus(
+                 formStatus,
+                 `Erro ao enviar "${arquivo.name}": ${uploadError.menssage}`,
+                 true
+               );
+               return;
             }
 
 
@@ -1197,7 +1163,7 @@ async function carregarAvaliacoes() {
             cidade,
             estado,
             endereco_formatado,
-            categorias (nome),
+            categoria,
             avaliacao_midias (id, tipo, url)
         `)
         .order(
@@ -1244,7 +1210,7 @@ async function carregarAvaliacoes() {
                     "Bairro não informado";
 
                 const categoria =
-                    avaliacao.categorias?.nome ||
+                    avaliacao.categoria ||
                     "Categoria não informada";
 
                 const comentario =
@@ -1403,7 +1369,7 @@ function atualizarMarcadores(
                 "Bairro";
 
             const categoria =
-                avaliacao.categorias?.nome ||
+                avaliacao.categoria ||
                 "Categoria";
 
 
